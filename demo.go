@@ -29,19 +29,6 @@ func init() {
 	collection = db.C("book")
 }
 
-func main() {
-
-	r := center.NewRouter()
-	// 使用中间件
-	r.Use(center.Logging(), center.Recover(), center.ReturnJson())
-	r.AddRoute("POST", "/books", AddBook)
-	r.AddRoute("GET", "/books", GetBooks)
-	r.AddRoute("GET", "/books/:id", GetBook)
-	r.AddRoute("PUT", "/books/:id", UpdateBook)
-	r.AddRoute("DELETE", "/books/:id", DeleteBook)
-	http.ListenAndServe(":8000", r)
-}
-
 // 添加一本书
 func AddBook(w http.ResponseWriter, r *http.Request, params url.Values) {
 	var book Book
@@ -120,4 +107,17 @@ func DeleteBook(w http.ResponseWriter, r *http.Request, params url.Values) {
 	}
 	json.NewEncoder(w).Encode(map[string]interface{}{})
 
+}
+
+func main() {
+
+	r := center.NewRouter()
+	// 使用中间件
+	r.Use(center.Logging(), center.Recover(), center.ReturnJson())
+	r.AddRoute("POST", "/books", AddBook)
+	r.AddRoute("GET", "/books", GetBooks)
+	r.AddRoute("GET", "/books/:id", GetBook)
+	r.AddRoute("PUT", "/books/:id", UpdateBook)
+	r.AddRoute("DELETE", "/books/:id", DeleteBook)
+	http.ListenAndServe(":8000", r)
 }
