@@ -1,4 +1,4 @@
-module center
+module github.com/goalong/center
 
 require (
 	github.com/kr/pretty v0.1.0 // indirect
