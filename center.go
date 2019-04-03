@@ -2,12 +2,14 @@ package center
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
 )
 
 type Handler func(http.ResponseWriter, *http.Request, url.Values)
+type Middleware func(Handler) Handler
 
 // 表示字典树的一个节点
 type Node struct {
@@ -38,14 +40,14 @@ func (r *Router) AddRoute(method, path string, handler Handler) {
 	if len(path) < 1 || path[0] != '/' {
 		panic("invalid path")
 	}
-	r.tree.addNode(method, path, handler)
+	r.tree.AddNode(method, path, handler)
 
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	params := req.Form
-	node, _ := r.tree.findNode(strings.Split(req.URL.Path, "/")[1:], params)
+	node, _ := r.tree.FindNode(strings.Split(req.URL.Path, "/")[1:], params)
 	if handler, ok := node.handlerMap[req.Method]; ok {
 		handler = Chain(handler, r.middlewares...)
 		handler(w, req, params)
@@ -56,7 +58,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // 遍历字典树，寻找URL路径对应的节点，找到的节点要么正好是URL对应的节点，要么是url前边若干部分对应的节点
 // 可以根据找到的节点存储的data值和URL路径的最后一部分进行对比来判断是否正好是完美的对应，还是只是前边若干部分的对应
-func (n *Node) findNode(parts []string, params url.Values) (*Node, string) {
+func (n *Node) FindNode(parts []string, params url.Values) (*Node, string) {
 	if len(n.children) > 0 {
 		for _, child := range n.children {
 			if child.data == parts[0] || child.isVar {
@@ -65,7 +67,7 @@ func (n *Node) findNode(parts []string, params url.Values) (*Node, string) {
 				}
 				left := parts[1:]
 				if len(left) > 0 {
-					return child.findNode(left, params)
+					return child.FindNode(left, params)
 				} else {
 					return child, parts[0]
 				}
@@ -76,11 +78,11 @@ func (n *Node) findNode(parts []string, params url.Values) (*Node, string) {
 }
 
 // 将新的URL按/分成各个部分，然后往字典树上增加还不存在的节点，注意到最后一部分时，需要设置该节点的handlerMap
-func (n *Node) addNode(method, path string, handler Handler) {
+func (n *Node) AddNode(method, path string, handler Handler) {
 	parts := strings.Split(path, "/")[1:]
 	total := len(parts)
 	for i := 0; i < total; i++ {
-		pNode, _ := n.findNode(parts, nil)
+		pNode, _ := n.FindNode(parts, nil)
 		current := parts[i]
 		if pNode.data == current && i == total-1 {
 			pNode.handlerMap[method] = handler
@@ -100,5 +102,6 @@ func (n *Node) addNode(method, path string, handler Handler) {
 
 func NotFoundHanler(w http.ResponseWriter, req *http.Request) {
 	w.WriteHeader(404)
+	log.Println(req.RequestURI, "404 Not Found")
 	fmt.Fprint(w, "Not Found")
 }

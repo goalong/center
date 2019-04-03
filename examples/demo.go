@@ -1,7 +1,7 @@
 package main
 
 import (
-	"center/center"
+	"center"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/mgo.v2"
