@@ -32,6 +32,7 @@ func init() {
 func main() {
 
 	r := center.NewRouter()
+	// 使用中间件
 	r.Use(center.Logging(), center.Recover(), center.ReturnJson())
 	r.AddRoute("POST", "/books", AddBook)
 	r.AddRoute("GET", "/books", GetBooks)
