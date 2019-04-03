@@ -16,18 +16,18 @@ type Node struct {
 	data       string // 该节点表示的路径
 	isVar      bool   // 该节点的路径是否是命名参数形式的
 	children   []*Node
-	handlerMap map[string]Handler //存储http方法到Handler的映射
+	HandlerMap map[string]Handler //存储http方法到Handler的映射
 }
 
 // 路由, 支持全局的中间件
 type Router struct {
-	tree        *Node
+	Tree        *Node
 	middlewares []Middleware
 }
 
 func NewRouter() *Router {
-	node := Node{data: "/", isVar: false, handlerMap: make(map[string]Handler)}
-	return &Router{tree: &node}
+	node := Node{data: "/", isVar: false, HandlerMap: make(map[string]Handler)}
+	return &Router{Tree: &node}
 }
 
 // 使用哪些中间件
@@ -40,15 +40,15 @@ func (r *Router) AddRoute(method, path string, handler Handler) {
 	if len(path) < 1 || path[0] != '/' {
 		panic("invalid path")
 	}
-	r.tree.AddNode(method, path, handler)
+	r.Tree.AddNode(method, path, handler)
 
 }
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	params := req.Form
-	node, _ := r.tree.FindNode(strings.Split(req.URL.Path, "/")[1:], params)
-	if handler, ok := node.handlerMap[req.Method]; ok {
+	node, _ := r.Tree.FindNode(strings.Split(req.URL.Path, "/")[1:], params)
+	if handler, ok := node.HandlerMap[req.Method]; ok {
 		handler = Chain(handler, r.middlewares...)
 		handler(w, req, params)
 	} else {
@@ -58,6 +58,8 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 
 // 遍历字典树，寻找URL路径对应的节点，找到的节点要么正好是URL对应的节点，要么是url前边若干部分对应的节点
 // 可以根据找到的节点存储的data值和URL路径的最后一部分进行对比来判断是否正好是完美的对应，还是只是前边若干部分的对应
+
+
 func (n *Node) FindNode(parts []string, params url.Values) (*Node, string) {
 	if len(n.children) > 0 {
 		for _, child := range n.children {
@@ -77,7 +79,7 @@ func (n *Node) FindNode(parts []string, params url.Values) (*Node, string) {
 	return n, parts[0]
 }
 
-// 将新的URL按/分成各个部分，然后往字典树上增加还不存在的节点，注意到最后一部分时，需要设置该节点的handlerMap
+// 将新的URL按/分成各个部分，然后往字典树上增加还不存在的节点，注意到最后一部分时，需要设置该节点的HandlerMap
 func (n *Node) AddNode(method, path string, handler Handler) {
 	parts := strings.Split(path, "/")[1:]
 	total := len(parts)
@@ -85,15 +87,15 @@ func (n *Node) AddNode(method, path string, handler Handler) {
 		pNode, _ := n.FindNode(parts, nil)
 		current := parts[i]
 		if pNode.data == current && i == total-1 {
-			pNode.handlerMap[method] = handler
+			pNode.HandlerMap[method] = handler
 			return
 		}
-		newNode := Node{data: current, isVar: false, handlerMap: make(map[string]Handler)}
+		newNode := Node{data: current, isVar: false, HandlerMap: make(map[string]Handler)}
 		if len(current) > 0 && current[0] == ':' {
 			newNode.isVar = true
 		}
 		if i == total-1 {
-			newNode.handlerMap[method] = handler
+			newNode.HandlerMap[method] = handler
 		}
 		pNode.children = append(pNode.children, &newNode)
 	}
