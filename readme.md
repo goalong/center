@@ -5,13 +5,14 @@
 * 完全使用标准库的接口，无第三方库的依赖
 * 代码量少，便于理解
 
-### 示例
+### 使用
+详见下面使用mongo、mgo以及此框架构建的Restful API.
 
 ```go
 package main
 
 import (
-	"center/center"
+	"github.com/goalong/center"
 	"encoding/json"
 	"fmt"
 	"gopkg.in/mgo.v2"
