@@ -35,7 +35,7 @@ func (r *Router) Use(middlewares ...Middleware) {
 	r.middlewares = append(r.middlewares, middlewares...)
 }
 
-// 增加一个路由
+// 注册一个路由
 func (r *Router) AddRoute(method, path string, handler Handler) {
 	if len(path) < 1 || path[0] != '/' {
 		panic("invalid path")
@@ -43,6 +43,8 @@ func (r *Router) AddRoute(method, path string, handler Handler) {
 	r.Tree.AddNode(method, path, handler)
 
 }
+
+
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	req.ParseForm()

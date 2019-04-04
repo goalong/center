@@ -5,6 +5,39 @@
 * 完全使用标准库的接口，无第三方库的依赖
 * 代码量少，便于理解
 
+### 核心结构
+路由使用的是类似字典树的数据结构，每个节点用如下的Node结构表示：
+```
+type Node struct {
+	Data       string // 该节点表示的路径
+	isVar      bool   // 该节点的路径是否是命名参数形式的
+	Children   []*Node // 子节点
+	HandlerMap map[string]Handler //存储http方法到Handler的映射
+}
+```
+
+### 注册路由
+使用的是AddRoute方法：
+```
+func (r *Router) AddRoute(method, path string, handler Handler)
+```
+
+例如给/articles/:id 这个URL注册路由，首先会将URL按/分成几个部分，这个例子中
+会分成articles和:id两个部分，对每一部分，在树上进行查找，如果没有就需要添加一个节点，
+如果某一部分是以冒号开头的，例如:id, 这种节点会将isVar字段设为true,
+对于每个URL的最后一部分，需要将Handler放到对应节点的HandlerMap中，HandlerMap的键为HTTP方法，
+值为给该URL注册的Handler.
+
+### 路由分发
+主要由FindNode方法来完成：
+```
+func (n *Node) FindNode(parts []string, params url.Values) (*Node, string)
+```
+
+会根据URL，按照/分成几个部分，然后逐层在树上进行查找，直到找到完全契合的节点或者发现找不到，
+找不到就交给NotFoundHanler处理，找到的话就可以在目标节点的HandlerMap中根据请求的方法找到对应的Handler
+
+
 ### 使用
 详见下面使用mongo、mgo以及此框架构建的Restful API, 代码在examples/demo.go文件中。
 
