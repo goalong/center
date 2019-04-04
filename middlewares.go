@@ -8,8 +8,6 @@ import (
 	"time"
 )
 
-
-
 // 将多个中间件连接起来
 func Chain(f Handler, middlewares ...Middleware) Handler {
 	for _, m := range middlewares {

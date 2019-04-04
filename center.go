@@ -13,9 +13,9 @@ type Middleware func(Handler) Handler
 
 // 表示字典树的一个节点
 type Node struct {
-	data       string // 该节点表示的路径
+	Data       string // 该节点表示的路径
 	isVar      bool   // 该节点的路径是否是命名参数形式的
-	children   []*Node
+	Children   []*Node
 	HandlerMap map[string]Handler //存储http方法到Handler的映射
 }
 
@@ -26,7 +26,7 @@ type Router struct {
 }
 
 func NewRouter() *Router {
-	node := Node{data: "/", isVar: false, HandlerMap: make(map[string]Handler)}
+	node := Node{Data: "/", isVar: false, HandlerMap: make(map[string]Handler)}
 	return &Router{Tree: &node}
 }
 
@@ -59,13 +59,12 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 // 遍历字典树，寻找URL路径对应的节点，找到的节点要么正好是URL对应的节点，要么是url前边若干部分对应的节点
 // 可以根据找到的节点存储的data值和URL路径的最后一部分进行对比来判断是否正好是完美的对应，还是只是前边若干部分的对应
 
-
 func (n *Node) FindNode(parts []string, params url.Values) (*Node, string) {
-	if len(n.children) > 0 {
-		for _, child := range n.children {
-			if child.data == parts[0] || child.isVar {
+	if len(n.Children) > 0 {
+		for _, child := range n.Children {
+			if child.Data == parts[0] || child.isVar {
 				if child.isVar && params != nil {
-					params.Add(child.data[1:], parts[0]) // 将URL中的变量参数提取出来
+					params.Add(child.Data[1:], parts[0]) // 将URL中的变量参数提取出来
 				}
 				left := parts[1:]
 				if len(left) > 0 {
@@ -86,18 +85,18 @@ func (n *Node) AddNode(method, path string, handler Handler) {
 	for i := 0; i < total; i++ {
 		pNode, _ := n.FindNode(parts, nil)
 		current := parts[i]
-		if pNode.data == current && i == total-1 {
+		if pNode.Data == current && i == total-1 {
 			pNode.HandlerMap[method] = handler
 			return
 		}
-		newNode := Node{data: current, isVar: false, HandlerMap: make(map[string]Handler)}
+		newNode := Node{Data: current, isVar: false, HandlerMap: make(map[string]Handler)}
 		if len(current) > 0 && current[0] == ':' {
 			newNode.isVar = true
 		}
 		if i == total-1 {
 			newNode.HandlerMap[method] = handler
 		}
-		pNode.children = append(pNode.children, &newNode)
+		pNode.Children = append(pNode.Children, &newNode)
 	}
 
 }
