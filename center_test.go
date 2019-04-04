@@ -80,7 +80,6 @@ func TestAddRoute(t *testing.T) {
 	}
 }
 
-
 func TestAddRoute2(t *testing.T) {
 	req, err := http.NewRequest("GET", "/hello/:name", nil)
 	if err != nil {
@@ -88,7 +87,7 @@ func TestAddRoute2(t *testing.T) {
 	}
 	rr := httptest.NewRecorder()
 	userName := "Monica"
-	params := url.Values{"name":[]string{userName} }
+	params := url.Values{"name": []string{userName}}
 	Hello(rr, req, params)
 	if status := rr.Code; status != http.StatusOK {
 		t.Error("failed")

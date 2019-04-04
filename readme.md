@@ -6,15 +6,15 @@
 * 代码量少，便于理解
 
 ### 使用
-详见下面使用mongo、mgo以及此框架构建的Restful API.
+详见下面使用mongo、mgo以及此框架构建的Restful API, 代码在examples/demo.go文件中。
 
 ```go
 package main
 
 import (
-	"github.com/goalong/center"
 	"encoding/json"
 	"fmt"
+	"github.com/goalong/center"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"net/http"
@@ -72,6 +72,10 @@ func GetBooks(w http.ResponseWriter, r *http.Request, params url.Values) {
 func GetBook(w http.ResponseWriter, r *http.Request, params url.Values) {
 	var book Book
 	id := params["id"][0]
+	ok := bson.IsObjectIdHex(id)
+	if !ok {
+		w.WriteHeader(404)
+	}
 	err := collection.FindId(bson.ObjectIdHex(id)).One(&book)
 	if err != nil {
 		if err.Error() == "not found" {
@@ -132,6 +136,4 @@ func main() {
 	r.AddRoute("DELETE", "/books/:id", DeleteBook)
 	http.ListenAndServe(":8000", r)
 }
-
-
 ```

@@ -61,6 +61,10 @@ func GetBooks(w http.ResponseWriter, r *http.Request, params url.Values) {
 func GetBook(w http.ResponseWriter, r *http.Request, params url.Values) {
 	var book Book
 	id := params["id"][0]
+	ok := bson.IsObjectIdHex(id)
+	if !ok {
+		w.WriteHeader(404)
+	}
 	err := collection.FindId(bson.ObjectIdHex(id)).One(&book)
 	if err != nil {
 		if err.Error() == "not found" {
